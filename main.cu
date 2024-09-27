@@ -110,7 +110,7 @@ void addDrugData(char*** arrayOfStrings, int& size, const char newString[]) {
     ++size;
 }
 
-void prepingGPUMemory(double *&d_ALGEBRAIC, int num_of_algebraic, int sample_size, double *&d_CONSTANTS, int num_of_constants, double *&d_RATES, int num_of_rates, double *&d_STATES, int num_of_states, param_t *&d_p_param, cipa_t *&temp_result, cipa_t *&cipa_result, double *&d_STATES_RESULT, double *&d_ic50, double *ic50, double *&d_conc, double *conc, param_t *p_param) {
+void prepingGPUMemory(double *&d_ALGEBRAIC, int num_of_algebraic, int sample_size, double *&d_CONSTANTS, int num_of_constants, double *&d_RATES, int num_of_rates, double *&d_STATES, int num_of_states, param_t *&d_p_param, cipa_t *&temp_result, cipa_t *&cipa_result, double *&d_STATES_RESULT, double *&d_ic50, double *ic50, double *&d_conc, double *conc, param_t *p_param, double *cvar, double *&d_cvar) {
     printf("preparing GPU memory space \n");
     cudaMalloc(&d_ALGEBRAIC, num_of_algebraic * sample_size * sizeof(double));
     cudaMalloc(&d_CONSTANTS, num_of_constants * sample_size * sizeof(double));
@@ -136,7 +136,7 @@ void prepingGPUMemory(double *&d_ALGEBRAIC, int num_of_algebraic, int sample_siz
     cudaMemcpy(d_p_param, p_param, sizeof(param_t), cudaMemcpyHostToDevice);
 }
 
-void freeingGPUMemory(double *d_ALGEBRAIC, double *d_CONSTANTS, double *d_RATES, double *d_STATES, param_t *d_p_param, cipa_t *temp_result, cipa_t *cipa_result, double *d_STATES_RESULT, double *d_ic50) {
+void freeingGPUMemory(double *d_ALGEBRAIC, double *d_CONSTANTS, double *d_RATES, double *d_STATES, param_t *d_p_param, cipa_t *temp_result, cipa_t *cipa_result, double *d_STATES_RESULT, double *d_ic50, double *d_cvar) {
     cudaFree(d_ALGEBRAIC);
     cudaFree(d_CONSTANTS);
     cudaFree(d_RATES);
@@ -146,6 +146,7 @@ void freeingGPUMemory(double *d_ALGEBRAIC, double *d_CONSTANTS, double *d_RATES,
     cudaFree(cipa_result);
     cudaFree(d_STATES_RESULT);
     cudaFree(d_ic50);
+    cudaFree(d_cvar);
 }
 
 int gpu_check(unsigned int datasize) {
@@ -367,6 +368,7 @@ int main(int argc, char **argv) {
 
         ic50 = (double *)malloc(14 * sample_limit * sizeof(double));
         conc = (double *)malloc(sample_limit * sizeof(double));
+        cvar = (double *)malloc(18 * sample_limit * sizeof(double));
 
         double *d_ic50;
         double *d_conc;
@@ -400,7 +402,7 @@ int main(int argc, char **argv) {
             printf("Reading: %d Conductance Variability samples\n", cvar_sample);
         }
 
-        prepingGPUMemory(d_ALGEBRAIC, num_of_algebraic, sample_size, d_CONSTANTS, num_of_constants, d_RATES, num_of_rates, d_STATES, num_of_states, d_p_param, temp_result, cipa_result, d_STATES_RESULT, d_ic50, ic50, d_conc, conc, p_param);
+        prepingGPUMemory(d_ALGEBRAIC, num_of_algebraic, sample_size, d_CONSTANTS, num_of_constants, d_RATES, num_of_rates, d_STATES, num_of_states, d_p_param, temp_result, cipa_result, d_STATES_RESULT, d_ic50, ic50, d_conc, conc, p_param, cvar, d_cvar);
 
         tic();
         printf("Timer started, doing simulation.... \n\n\nGPU Usage at this moment: \n");
@@ -443,7 +445,7 @@ int main(int argc, char **argv) {
         printf("Successfully reach here!!");
         // TODO: Automation 4. Free up GPU memory
         freeingGPUMemory(d_ALGEBRAIC, d_CONSTANTS, d_RATES, d_STATES,
-                         d_p_param, temp_result, cipa_result, d_STATES_RESULT, d_ic50);
+                         d_p_param, temp_result, cipa_result, d_STATES_RESULT, d_ic50, d_cvar);
 
         FILE *writer;
         int check;
@@ -501,7 +503,7 @@ int main(int argc, char **argv) {
         fclose(writer);
 
         freeingGPUMemory(d_ALGEBRAIC, d_CONSTANTS, d_RATES, d_STATES,
-                         d_p_param, temp_result, cipa_result, d_STATES_RESULT, d_ic50);
+                         d_p_param, temp_result, cipa_result, d_STATES_RESULT, d_ic50, d_cvar);
 
         free(h_states); free(h_cipa_result); 
 
