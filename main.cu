@@ -406,7 +406,9 @@ int main(int argc, char **argv) {
 
         tic();
         printf("Timer started, doing simulation.... \n\n\nGPU Usage at this moment: \n");
-        const int thread = 32;
+        int thread;
+        if(sample_size>=32){ thread = 32;} else thread = sample_size;
+        
         int block = (sample_size + thread - 1) / thread;
         // int block = (sample_size + thread - 1) / thread;
         if (gpu_check(15 * sample_size * datapoint_size * sizeof(double) + sizeof(param_t)) == 1) {
