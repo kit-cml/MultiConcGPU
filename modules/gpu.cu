@@ -31,7 +31,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
     
     unsigned int input_counter = 0;
 
-    int num_of_constants = 146;
+    int num_of_constants = 145;
     int num_of_states = 41;
     int num_of_algebraic = 199;
     int num_of_rates = 41;
@@ -156,6 +156,9 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
         d_ALGEBRAIC, 
         sample_id); 
         
+        //euler only
+        // dt_set = 0.005;
+
         // printf("tcurr at core %d: %lf\n",sample_id,tcurr[sample_id]);
         if (floor((tcurr[sample_id] + dt_set) / bcl) == floor(tcurr[sample_id] / bcl)) { 
           dt[sample_id] = dt_set;
@@ -249,7 +252,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
         }
 
         solveAnalytical(d_CONSTANTS, d_STATES, d_ALGEBRAIC, d_RATES,  dt[sample_id], sample_id);
-
+        // solveEuler(d_STATES, d_RATES, dt[sample_id], sample_id);
 
         if (pace_count >= pace_max-last_drug_check_pace)
         {

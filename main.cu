@@ -381,7 +381,7 @@ int main(int argc, char **argv) {
 
         cipa_t *temp_result, *cipa_result;
 
-        int num_of_constants = 146;
+        int num_of_constants = 145;
         int num_of_states = 41;
         int num_of_algebraic = 199;
         int num_of_rates = 41;
